@@ -12,7 +12,7 @@ services:
       - "10636:10636"
       - "11001:11001"
    
-  wso2is:
+  is-key-manager:
     image: wso2-is
     container_name: is
     ports:
@@ -25,7 +25,7 @@ services:
     depends_on:
       - mysql-apacheds
   
-  wso2am:
+  api-manager:
     image: wso2-am
     container_name: am
     ports:
