@@ -1,70 +1,52 @@
-### This repository contains API Manager 2.1.0 distributed deployment with Docker compose
+### API Manager 2.1.0 - Identity Server 5.3.0 con Docker compose
 
-![alt tag](https://github.com/wso2/docker-apim/blob/2.1.x/docker-compose/patterns/design/am-2.1.0-pattern-7.jpeg)
+![alt tag](file:///doc/am-2.1.0-is-5.3.0.jpeg)
 
-## Pre-requisites
+## Pre-requisitos
 
  * Docker 
  * Docker compose
+ * Copiar
+ 
 
-#### Docker installation for linux
-```
-wget -qO- https://get.docker.com/ | sh
-```
+Origen | Destino 
+----------- | --------------------- 
+servicio-config | deps
+servicio-config | deps/am
+servicio-config | deps/is
 
-#### Docker installation for Mac
-
-https://docs.docker.com/docker-for-mac/
-
-#### Docker installation for Windows
-
-https://docs.docker.com/docker-for-windows/
-
-#### Docker Compose Installation
-
-https://docs.docker.com/compose/install/
-
-
-#### How to run
-
-```docker login docker.wso2.com ```
+#### Como lanzarlo
 
 ```docker-compose pull```
 
 ```docker-compose up --build -d ```
 
-This will deploy the following,
+Esto despliega lo siguiente,
 
-* Mysql server (container) with apimdb, userdb, regdb
-* APIM Container
-* Nginx Load Balancer container and points the APIM components through the load balancer.
+* Mysql server (contenedor) con apimdb, userdb, regdb, y ApacheDS con
+* APIM Contenedor
+* IS (Contenedor)
+
+#### Como probar
 
 
-#### How to test
-
-Add the following entries to the /etc/hosts
-```
-127.0.0.1 api-manager is-key-manager apim_rdbms
-```
-If you are using docker machine, please use the docker machine IP instead of the local machine IP.
-
-#### How to access the environment
+#### Como acceder al entorno
 
 Publisher
 
 ```
-https://api-manager/publisher
+https://localhost:9444/publisher
 ```
 
 Store
 
 ```
-https://api-manager/store/
+https://localhost:9444/store/
 ```
 
 
 Gateway Manager
 
 ```
-https://api-manager/carbon/
+https://localhost:9444/carbon/
 ```
