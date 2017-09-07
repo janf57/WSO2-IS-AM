@@ -6,12 +6,10 @@ ENV http_proxy http://T0000104:12345678@192.168.50.140:8080
 ENV https_proxy https://T0000104:12345678@192.168.50.140:8080
 
 ENV WSO2_PRODUCT_FOLDER wso2am-2.1.0
-ENV WSO2_BUNDLE_NAME wso2am-2.1.0.2
+ENV WSO2_BUNDLE_NAME wso2am-2.1.0
 ENV WSO2_PRODUCT_WUM_FOLDER wso2am-2.1.0
 
-ENV WSO2_VERSION 2.1.0.2
-ENV WSO2_API_IMPORT_EXPORT_VERSION 2.1.0.0
-ENV WSO2_API_IMPORT_EXPORT_ECI_VERSION 2.1.0.0
+ENV WSO2_VERSION 2.1.0
 
 ADD /deps/unzip-6.0-16.el7.x86_64.rpm /tmp/unzip-6.0-16.el7.x86_64.rpm
 RUN rpm -i /tmp/unzip-6.0-16.el7.x86_64.rpm \
@@ -24,13 +22,16 @@ RUN unzip jq-linux64*.zip \
     && chmod +x /usr/bin/jq \
     && rm jq-linux64*.zip
 
-COPY deps/java_jdk-1.8.zip .  
-RUN mkdir /opt/jdk1.8 \
-    && unzip java_jdk-1.8.zip -d /opt/jdk1.8/ \
-    && ln -s /opt/jdk1.8 /opt/jdk \
-    && rm java_jdk-1.8.zip
+ADD /deps/jdk-8u144-linux-x64.rpm /tmp/jdk-8u144-linux-x64.rpm
+RUN rpm -i /tmp/jdk-8u144-linux-x64.rpm \
+    && rm /tmp/jdk-8u144-linux-x64.rpm
+		
+ADD /deps/jdk-8u144-linux-x64.rpm /tmp/jdk-8u144-linux-x64.rpm
+RUN rpm -i /tmp/jdk-8u144-linux-x64.rpm \
+	&& ln -s /usr/java/jdk1.8.0_144 /usr/java/jdk \
+    && rm /tmp/jdk-8u144-linux-x64.rpm
 
-ENV JAVA_HOME=/opt/jdk
+ENV JAVA_HOME=/usr/java/jdk1.8.0_144
 
 RUN mkdir -p /tmp/${WSO2_PRODUCT_FOLDER}-stage
 # Configuracion WSO2 Api Manager
@@ -71,9 +72,10 @@ RUN mv jackson-dataformat-yaml*.jar /opt/${WSO2_PRODUCT_FOLDER}/repository/compo
 COPY deps/am/boon-0.34.jar . 
 RUN mv boon*.jar /opt/${WSO2_PRODUCT_FOLDER}/repository/components/lib/
 
-COPY deps/am/config/config.zip . 
-RUN unzip -o /config.zip -d /opt/${WSO2_PRODUCT_FOLDER}/ 
-RUN rm config.zip
+COPY deps/am/config/ /opt/${WSO2_PRODUCT_FOLDER}/ 
+#COPY deps/am/config/config.zip . 
+#RUN unzip -o /config.zip -d /opt/${WSO2_PRODUCT_FOLDER}/ 
+#RUN rm config.zip
 
 ENV http_proxy ""
 ENV https_proxy ""

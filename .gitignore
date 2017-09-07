@@ -1,4 +1,5 @@
 notas.txt
 deps/java_jdk-1.8.zip
-deps/am/wso2am-2.1.0.2.zip
-deps/is/wso2is-5.3.0.2.zip
+deps/jdk-8u144-linux-x64.rpm
+deps/am/wso2am-2.1.0.zip
+deps/is/wso2is-5.3.0.zip

@@ -15,12 +15,13 @@ RUN rpm -i /tmp/unzip-6.0-16.el7.x86_64.rpm \
    && rm /tmp/unzip-6.0-16.el7.x86_64.rpm
 
 #jdk 1.8
-ADD deps/java_jdk-1.8.zip /tmp/
-RUN mkdir /opt/jdk1.8 \
-    && unzip /tmp/java_jdk-1.8.zip -d /opt/jdk1.8/ \
-    && ln -s /opt/jdk1.8 /opt/jdk \
-    && rm /tmp/java_jdk-1.8.zip
-ENV JAVA_HOME=/opt/jdk
+ADD /deps/jdk-8u144-linux-x64.rpm /tmp/jdk-8u144-linux-x64.rpm
+RUN rpm -i /tmp/jdk-8u144-linux-x64.rpm \
+	&& ln -s /usr/java/jdk1.8.0_144 /usr/java/jdk \
+    && rm /tmp/jdk-8u144-linux-x64.rpm
+
+ENV JAVA_HOME=/usr/java/jdk1.8.0_144
+
 ENV PATH "$PATH:$JAVA_HOME/bin"
 
 # jq

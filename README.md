@@ -11,9 +11,9 @@
 
 Origen | Destino 
 -------- | -------------- 
-java_jdk-1.8.zip | deps
-wso2am-2.1.0.2.zip | deps/am
-wso2is-5.3.0.2.zip | deps/is
+http://download.oracle.com/otn-pub/java/jdk/8u144-b01/090f390dda5b47b9b721c7dfaa008135/jdk-8u144-linux-x64.rpm | deps
+https://product-dist.wso2.com/products/api-manager/2.1.0/wso2am-2.1.0.zip | deps/am
+https://product-dist.wso2.com/products/identity-server/5.3.0/wso2is-5.3.0.zip | deps/is
 
 #### Como lanzarlo
 

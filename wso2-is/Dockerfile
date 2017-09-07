@@ -6,10 +6,10 @@ ENV http_proxy http://T0000104:12345678@192.168.50.140:8080
 ENV https_proxy https://T0000104:12345678@192.168.50.140:8080
 
 ENV WSO2_PRODUCT_FOLDER wso2is-5.3.0
-ENV WSO2_BUNDLE_NAME wso2is-5.3.0.2
+ENV WSO2_BUNDLE_NAME wso2is-5.3.0
 ENV WSO2_PRODUCT_WUM_FOLDER wso2is-km-5.3.0
 
-ENV WSO2_VERSION 5.3.0.2
+ENV WSO2_VERSION 5.3.0
 
 RUN mkdir -p /tmp/${WSO2_PRODUCT_FOLDER}-stage
 
@@ -17,14 +17,12 @@ ADD /deps/unzip-6.0-16.el7.x86_64.rpm /tmp/unzip-6.0-16.el7.x86_64.rpm
 RUN rpm -i /tmp/unzip-6.0-16.el7.x86_64.rpm \
     && rm /tmp/unzip-6.0-16.el7.x86_64.rpm
 
+ADD /deps/jdk-8u144-linux-x64.rpm /tmp/jdk-8u144-linux-x64.rpm
+RUN rpm -i /tmp/jdk-8u144-linux-x64.rpm \
+	&& ln -s /usr/java/jdk1.8.0_144 /usr/java/jdk \
+    && rm /tmp/jdk-8u144-linux-x64.rpm
 
-ADD deps/java_jdk-1.8.zip /tmp/
-RUN mkdir /opt/jdk1.8 \
-    && unzip /tmp/java_jdk-1.8.zip -d /opt/jdk1.8/ \
-    && ln -s /opt/jdk1.8 /opt/jdk \
-    && rm /tmp/java_jdk-1.8.zip
-
-ENV JAVA_HOME=/opt/jdk
+ENV JAVA_HOME=/usr/java/jdk1.8.0_144
 
 # Configuracion WSO2 Identity Server
 
