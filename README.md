@@ -1,6 +1,6 @@
 ### API Manager 2.1.0 - Identity Server 5.3.0 con Docker compose
 
-![alt tag](file:///doc/am-2.1.0-is-5.3.0.jpeg)
+![alt tag](https://github.com/janf57/WSO2-IS-AM/blob/master/doc/am-2.1.0-is-5.3.0.jpeg)
 
 ## Pre-requisitos
 
@@ -10,10 +10,10 @@
  
 
 Origen | Destino 
------------ | --------------------- 
-servicio-config | deps
-servicio-config | deps/am
-servicio-config | deps/is
+-------- | -------------- 
+java_jdk-1.8.zip | deps
+wso2am-2.1.0.2.zip | deps/am
+wso2is-5.3.0.2.zip | deps/is
 
 #### Como lanzarlo
 
