@@ -13,11 +13,11 @@ ENV WSO2_VERSION 5.3.0
 
 RUN mkdir -p /tmp/${WSO2_PRODUCT_FOLDER}-stage
 
-ADD /deps/unzip-6.0-16.el7.x86_64.rpm /tmp/unzip-6.0-16.el7.x86_64.rpm
+ADD /deps/packages/unzip-6.0-16.el7.x86_64.rpm /tmp/unzip-6.0-16.el7.x86_64.rpm
 RUN rpm -i /tmp/unzip-6.0-16.el7.x86_64.rpm \
     && rm /tmp/unzip-6.0-16.el7.x86_64.rpm
 
-ADD /deps/jdk-8u144-linux-x64.rpm /tmp/jdk-8u144-linux-x64.rpm
+ADD /deps/packages/jdk-8u144-linux-x64.rpm /tmp/jdk-8u144-linux-x64.rpm
 RUN rpm -i /tmp/jdk-8u144-linux-x64.rpm \
 	&& ln -s /usr/java/jdk1.8.0_144 /usr/java/jdk \
     && rm /tmp/jdk-8u144-linux-x64.rpm

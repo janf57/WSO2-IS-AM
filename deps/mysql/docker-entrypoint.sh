@@ -1,197 +1,324 @@
-#!/bin/bash
-# Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; version 2 of the License.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-set -e
+#!/bin/sh -eu
 
-echo "[Entrypoint] MySQL Docker Image 8.0.2-dmr-1.1.0"
-# Fetch value from server config
-# We use mysqld --verbose --help instead of my_print_defaults because the
-# latter only show values present in config files, and not server defaults
-_get_config() {
-	local conf="$1"; shift
-	"$@" --verbose --help 2>/dev/null | grep "^$conf" | awk '$1 == "'"$conf"'" { print $2; exit }'
+###
+### Variables
+###
+DEBUG_COMMANDS=0
+
+
+###
+### Functions
+###
+run() {
+	_cmd="${1}"
+	_debug="0"
+
+	_red="\033[0;31m"
+	_green="\033[0;32m"
+	_reset="\033[0m"
+	_user="$(whoami)"
+
+
+	# If 2nd argument is set and enabled, allow debug command
+	if [ "${#}" = "2" ]; then
+		if [ "${2}" = "1" ]; then
+			_debug="1"
+		fi
+	fi
+
+
+	if [ "${DEBUG_COMMANDS}" = "1" ] || [ "${_debug}" = "1" ]; then
+		printf "${_red}%s \$ ${_green}${_cmd}${_reset}\n" "${_user}"
+	fi
+	sh -c "LANG=C LC_ALL=C ${_cmd}"
 }
 
-# If command starts with an option, prepend mysqld
-# This allows users to add command-line options without
-# needing to specify the "mysqld" command
-if [ "${1:0:1}" = '-' ]; then
-	set -- mysqld "$@"
+log() {
+	_lvl="${1}"
+	_msg="${2}"
+
+	_clr_ok="\033[0;32m"
+	_clr_info="\033[0;34m"
+	_clr_warn="\033[0;33m"
+	_clr_err="\033[0;31m"
+	_clr_rst="\033[0m"
+
+	if [ "${_lvl}" = "ok" ]; then
+		printf "${_clr_ok}[OK]   %s${_clr_rst}\n" "${_msg}"
+	elif [ "${_lvl}" = "info" ]; then
+		printf "${_clr_info}[INFO] %s${_clr_rst}\n" "${_msg}"
+	elif [ "${_lvl}" = "warn" ]; then
+		printf "${_clr_warn}[WARN] %s${_clr_rst}\n" "${_msg}" 1>&2	# stdout -> stderr
+	elif [ "${_lvl}" = "err" ]; then
+		printf "${_clr_err}[ERR]  %s${_clr_rst}\n" "${_msg}" 1>&2	# stdout -> stderr
+	else
+		printf "${_clr_err}[???]  %s${_clr_rst}\n" "${_msg}" 1>&2	# stdout -> stderr
+	fi
+}
+
+
+###
+### Read out MySQL Default config
+###
+get_mysql_default_config() {
+	_key="${1}"
+	mysqld --verbose --help --log-bin-index="$(mktemp -u)" 2>/dev/null | grep "^${_key}" | awk '{ print $2; exit }'
+}
+
+
+###
+### Set MySQL Custom options
+###
+set_mysql_custom_settings() {
+	_conf_sect="${1}"
+	_mysql_key="${2}"
+	_shell_var="${3}"
+	_extra_val="${4}"	# Extra value to append to _shell_var
+	_conf_file="${5}"
+
+
+	if ! set | grep "^${_shell_var}=" >/dev/null 2>&1; then
+		_mysql_val="$( get_mysql_default_config "${_mysql_key}" )"
+		log "info" "\$${_shell_var} not set. Keeping default: [${_conf_sect}] ${_mysql_key}=${_mysql_val}"
+
+	else
+		_shell_val="$( eval "echo \${${_shell_var}}" )"
+		_value="${_shell_val}${_extra_val}"
+
+		if [ "${_value}" = "" ]; then
+			_mysql_val="$( get_mysql_default_config "${_mysql_key}" )"
+			log "warn" "\$${_shell_var} is empty. Keeping default: [${_conf_sect}] ${_mysql_key}=${_mysql_val}"
+
+		else
+			log "info" "Setting MySQL: [${_conf_sect}] ${_mysql_key}=${_value}"
+
+			# Add file
+			if [ ! -f "${_conf_file}" ]; then
+				run "touch ${_conf_file}"
+			fi
+
+			# Add section
+			if ! grep -q "\[${_conf_sect}\]" "${_conf_file}"; then
+				run "echo '[${_conf_sect}]' >> ${_conf_file}"
+				run "echo '${_mysql_key} = ${_value}' >> ${_conf_file}"
+
+			else
+				run "sed -i'' 's|\[${_conf_sect}\]|\[${_conf_sect}\]\n${_mysql_key} = ${_value}|g' ${_conf_file}"
+			fi
+		fi
+	fi
+}
+
+
+
+
+################################################################################
+# BOOTSTRAP
+################################################################################
+
+if set | grep '^DEBUG_COMPOSE_ENTRYPOINT='  >/dev/null 2>&1; then
+	if [ "${DEBUG_COMPOSE_ENTRYPOINT}" = "1" ]; then
+		DEBUG_COMMANDS=1
+	fi
 fi
 
-if [ "$1" = 'mysqld' ]; then
-	# Test that the server can start. We redirect stdout to /dev/null so
-	# only the error messages are left.
-	result=0
-	output=$("$@" --verbose --help 2>&1 > /dev/null) || result=$?
-	if [ ! "$result" = "0" ]; then
-		echo >&2 '[Entrypoint] ERROR: Unable to start MySQL. Please check your configuration.'
-		echo >&2 "[Entrypoint] $output"
+
+
+################################################################################
+# ENVIRONMENTAL CHECKS
+################################################################################
+
+
+
+###
+### MySQL Password Options
+###
+if ! set | grep '^MYSQL_ROOT_PASSWORD=' >/dev/null 2>&1; then
+	log "err" "\$MYSQL_ROOT_PASSWORD must be set."
+	exit 1
+fi
+
+
+################################################################################
+# MAIN ENTRY POINT
+################################################################################
+
+
+###
+### Adjust timezone
+###
+
+if ! set | grep '^TIMEZONE='  >/dev/null 2>&1; then
+	log "warn" "\$TIMEZONE not set."
+else
+	if [ -f "/usr/share/zoneinfo/${TIMEZONE}" ]; then
+		# Unix Time
+		log "info" "Setting docker timezone to: ${TIMEZONE}"
+		run "rm /etc/localtime"
+		run "ln -s /usr/share/zoneinfo/${TIMEZONE} /etc/localtime"
+	else
+		log "err" "Invalid timezone for \$TIMEZONE."
+		log "err" "\$TIMEZONE: '${TIMEZONE}' does not exist."
+		exit 1
+	fi
+fi
+log "info" "Docker date set to: $(date)"
+
+
+
+
+###
+### Add custom Configuration
+###
+
+# MYSQL_GENERAL_LOG
+set_mysql_custom_settings "mysqld" "general-log" "MYSQL_GENERAL_LOG" "" "${MYSQL_BASE_INCL}/logging.cnf"
+
+# MYSQL_SOCKET_DIR
+set_mysql_custom_settings "client" "socket" "MYSQL_SOCKET_DIR" "/mysqld.sock" "${MYSQL_BASE_INCL}/socket.cnf"
+set_mysql_custom_settings "mysql"  "socket" "MYSQL_SOCKET_DIR" "/mysqld.sock" "${MYSQL_BASE_INCL}/socket.cnf"
+set_mysql_custom_settings "mysqld" "socket" "MYSQL_SOCKET_DIR" "/mysqld.sock" "${MYSQL_BASE_INCL}/socket.cnf"
+
+# Take care about custom socket directories
+if set | grep "^MYSQL_SOCKET_DIR=" >/dev/null 2>&1; then
+
+	# Create socket directory
+	if [ ! -d "${MYSQL_SOCKET_DIR}" ]; then
+		run "mkdir -p ${MYSQL_SOCKET_DIR}"
+
+	# Delete existing socket file
+	elif [ -f "${MYSQL_SOCKET_DIR}/mysqld.sock" ]; then
+		run "rm -f ${MYSQL_SOCKET_DIR}/mysqld.sock"
+	fi
+
+	# Set socket permission
+	run "chown ${MY_USER}:${MY_GROUP} ${MYSQL_SOCKET_DIR}"
+	run "chmod 0777 ${MYSQL_SOCKET_DIR}"
+fi
+
+
+
+
+################################################################################
+# INSTALLATION
+################################################################################
+
+DB_DATA_DIR="$( get_mysql_default_config "datadir" )"
+
+
+##
+## INSTALLATION
+##
+
+# Fixing permissions
+if [ ! -f "${MYSQL_LOG_QUERY}" ]; then
+	run "touch ${MYSQL_LOG_QUERY}"
+fi
+if [ ! -f "${MYSQL_LOG_SLOW}" ]; then
+	run "touch ${MYSQL_LOG_SLOW}"
+fi
+if [ ! -f "${MYSQL_LOG_ERROR}" ]; then
+	run "touch ${MYSQL_LOG_ERROR}"
+fi
+
+run "chown -R ${MY_USER}:${MY_GROUP} ${DB_DATA_DIR}"
+run "chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_DAT}"
+run "chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_LOG}"
+run "chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_PID}"
+run "chown -R ${MY_USER}:${MY_GROUP} ${MYSQL_DEF_SCK}"
+
+run "chmod 0775 ${DB_DATA_DIR}"
+run "chmod 0775 ${MYSQL_DEF_DAT}"
+run "chmod 0775 ${MYSQL_DEF_LOG}"
+run "chmod 0775 ${MYSQL_DEF_PID}"
+run "chmod 0775 ${MYSQL_DEF_SCK}"
+
+run "find ${MYSQL_DEF_LOG}/ -type f -exec chmod 0664 {} \;"
+
+# Directory already exists and has content (other thab '.' and '..')
+if [ -d "${DB_DATA_DIR}/mysql" ] && [ "$( ls -A "${DB_DATA_DIR}/mysql" )" ]; then
+	log "info" "Found existing data directory. MySQL already setup."
+
+else
+
+	log "info" "No existing MySQL data directory found. Setting up MySQL for the first time."
+
+	# Create datadir if not exist yet
+	if [ ! -d "${DB_DATA_DIR}" ]; then
+		log "info" "Creating empty data directory in: ${DB_DATA_DIR}."
+		run "mkdir -p ${DB_DATA_DIR}"
+		run "chown -R ${MY_USER}:${MY_GROUP} ${DB_DATA_DIR}"
+		run "chmod 0777 ${MY_USER}:${MY_GROUP} ${DB_DATA_DIR}"
+	fi
+
+
+	# Install Database
+	run "mysql_install_db --datadir=${DB_DATA_DIR} --user=${MY_USER}"
+
+
+	# Start server
+	run "mysqld --skip-networking &"
+
+
+	# Wait at max 60 seconds for it to start up
+	i=0
+	max=60
+	while [ $i -lt $max ]; do
+		if echo 'SELECT 1' |  mysql --protocol=socket -uroot  > /dev/null 2>&1; then
+			break
+		fi
+		log "info" "Initializing ..."
+		sleep 1s
+		i=$(( i + 1 ))
+	done
+
+
+	# Get current pid
+	pid="$(pgrep mysqld | head -1)"
+	if [ "${pid}" = "" ]; then
+		log "err" "Could not find running MySQL PID."
+		log "err" "MySQL init process failed."
 		exit 1
 	fi
 
-	# Get config
-	DATADIR="$(_get_config 'datadir' "$@")"
-	SOCKET="$(_get_config 'socket' "$@")"
 
-	if [ ! -d "$DATADIR/mysql" ]; then
-		if [ -z "$MYSQL_ROOT_PASSWORD" -a -z "$MYSQL_ALLOW_EMPTY_PASSWORD" -a -z "$MYSQL_RANDOM_ROOT_PASSWORD" ]; then
-			echo >&2 '[Entrypoint] ERROR: No password option specified for new database.'
-			echo >&2 '[Entrypoint]   You need to specify one of the following:'
-			echo >&2 '[Entrypoint]   - MYSQL_RANDOM_ROOT_PASSWORD (recommended)'
-			echo >&2 '[Entrypoint]   - MYSQL_ROOT_PASSWORD'
-			echo >&2 '[Entrypoint]   - MYSQL_ALLOW_EMPTY_PASSWORD'
-			exit 1
+	# Bootstrap MySQL
+	log "info" "Setting up root user permissions."
+	echo "DELETE FROM mysql.user ;" | mysql --protocol=socket -uroot
+	echo "CREATE USER 'root'@'%' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}' ;" | mysql --protocol=socket -uroot
+	echo "GRANT ALL ON *.* TO 'root'@'%' WITH GRANT OPTION ;" | mysql --protocol=socket -uroot
+	echo "DROP DATABASE IF EXISTS test ;" | mysql --protocol=socket -uroot
+	echo "FLUSH PRIVILEGES ;" | mysql --protocol=socket -uroot
+
+
+	# Shutdown MySQL
+	log "info" "Shutting down MySQL."
+	run "kill -s TERM ${pid}"
+	i=0
+	max=60
+	while [ $i -lt $max ]; do
+		if ! pgrep mysqld >/dev/null 2>&1; then
+			break
 		fi
-		# If the password variable is a filename we use the contents of the file
-		if [ -f "$MYSQL_ROOT_PASSWORD" ]; then
-			MYSQL_ROOT_PASSWORD="$(cat $MYSQL_ROOT_PASSWORD)"
-		fi
-		mkdir -p "$DATADIR"
-		chown -R mysql:mysql "$DATADIR"
+		sleep 1s
+		i=$(( i + 1 ))
+	done
 
-		echo '[Entrypoint] Initializing database'
-		"$@" --initialize-insecure
-		echo '[Entrypoint] Database initialized'
 
-		"$@" --daemonize --skip-networking --socket="$SOCKET"
-
-		# To avoid using password on commandline, put it in a temporary file.
-		# The file is only populated when and if the root password is set.
-		PASSFILE=$(mktemp -u /var/lib/mysql-files/XXXXXXXXXX)
-		install /dev/null -m0600 -omysql -gmysql "$PASSFILE"
-		mysql=( mysql --defaults-extra-file="$PASSFILE" --protocol=socket -uroot -hlocalhost --socket="$SOCKET")
-
-		if [ ! -z "" ];
-		then
-			for i in {30..0}; do
-				if mysqladmin --socket="$SOCKET" ping &>/dev/null; then
-					break
-				fi
-				echo '[Entrypoint] Waiting for server...'
-				sleep 1
-			done
-			if [ "$i" = 0 ]; then
-				echo >&2 '[Entrypoint] Timeout during MySQL init.'
-				exit 1
-			fi
-		fi
-
-		mysql_tzinfo_to_sql /usr/share/zoneinfo | "${mysql[@]}" mysql
-		
-		if [ ! -z "$MYSQL_RANDOM_ROOT_PASSWORD" ]; then
-			MYSQL_ROOT_PASSWORD="$(pwmake 128)"
-			echo "[Entrypoint] GENERATED ROOT PASSWORD: $MYSQL_ROOT_PASSWORD"
-		fi
-		if [ -z "$MYSQL_ROOT_HOST" ]; then
-			ROOTCREATE="ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';"
-		else
-			ROOTCREATE="ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}'; \
-			CREATE USER 'root'@'${MYSQL_ROOT_HOST}' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}'; \
-			GRANT ALL ON *.* TO 'root'@'${MYSQL_ROOT_HOST}' WITH GRANT OPTION ;"
-		fi
-		"${mysql[@]}" <<-EOSQL
-			-- What's done in this file shouldn't be replicated
-			--  or products like mysql-fabric won't work
-			SET @@SESSION.SQL_LOG_BIN=0;
-			DELETE FROM mysql.user WHERE user NOT IN ('mysql.session', 'mysql.sys', 'root') OR host NOT IN ('localhost');
-			CREATE USER 'healthchecker'@'localhost' IDENTIFIED BY 'healthcheckpass';
-			${ROOTCREATE}
-			FLUSH PRIVILEGES ;
-		EOSQL
-		if [ ! -z "$MYSQL_ROOT_PASSWORD" ]; then
-			# Put the password into the temporary config file
-			cat >"$PASSFILE" <<EOF
-[client]
-password="${MYSQL_ROOT_PASSWORD}"
-EOF
-			#mysql+=( -p"${MYSQL_ROOT_PASSWORD}" )
-		fi
-
-		if [ "$MYSQL_DATABASE" ]; then
-			echo "CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\` ;" | "${mysql[@]}"
-			mysql+=( "$MYSQL_DATABASE" )
-		fi
-
-		if [ "$MYSQL_USER" -a "$MYSQL_PASSWORD" ]; then
-			echo "CREATE USER '"$MYSQL_USER"'@'%' IDENTIFIED BY '"$MYSQL_PASSWORD"' ;" | "${mysql[@]}"
-
-			if [ "$MYSQL_DATABASE" ]; then
-				echo "GRANT ALL ON \`"$MYSQL_DATABASE"\`.* TO '"$MYSQL_USER"'@'%' ;" | "${mysql[@]}"
-			fi
-
-			echo 'FLUSH PRIVILEGES ;' | "${mysql[@]}"
-		fi
-		echo
-		for f in /docker-entrypoint-initdb.d/*; do
-			case "$f" in
-				*.sh)  echo "[Entrypoint] running $f"; . "$f" ;;
-				*.sql) echo "[Entrypoint] running $f"; "${mysql[@]}" < "$f" && echo ;;
-				*)     echo "[Entrypoint] ignoring $f" ;;
-			esac
-			echo
-		done
-
-		# When using a local socket, mysqladmin shutdown will only complete when the server is actually down
-		mysqladmin --defaults-extra-file="$PASSFILE" shutdown -uroot --socket="$SOCKET"
-		rm -f "$PASSFILE"
-		unset PASSFILE
-		echo "[Entrypoint] Server shut down"
-
-		# This needs to be done outside the normal init, since mysqladmin shutdown will not work after
-		if [ ! -z "$MYSQL_ONETIME_PASSWORD" ]; then
-			if [ -z "yes" ]; then
-				echo "[Entrypoint] User expiration is only supported in MySQL 5.6+"
-			else
-				echo "[Entrypoint] Setting root user as expired. Password will need to be changed before database can be used."
-				SQL=$(mktemp -u /var/lib/mysql-files/XXXXXXXXXX)
-				install /dev/null -m0600 -omysql -gmysql "$SQL"
-				if [ ! -z "$MYSQL_ROOT_HOST" ]; then
-					cat << EOF > "$SQL"
-ALTER USER 'root'@'${MYSQL_ROOT_HOST}' PASSWORD EXPIRE;
-ALTER USER 'root'@'localhost' PASSWORD EXPIRE;
-EOF
-				else
-					cat << EOF > "$SQL"
-ALTER USER 'root'@'localhost' PASSWORD EXPIRE;
-EOF
-				fi
-				set -- "$@" --init-file="$SQL"
-				unset SQL
-			fi
-		fi
-
-		echo
-		echo '[Entrypoint] MySQL init process done. Ready for start up.'
-		echo
+	# Check if it is still running
+	if pgrep mysqld >/dev/null 2>&1; then
+		log "err" "Unable to shutdown MySQL server."
+		log "err" "MySQL init process failed."
+		exit 1
 	fi
+	log "info" "MySQL successfully installed."
 
-	# Used by healthcheck to make sure it doesn't mistakenly report container
-	# healthy during startup
-	# Put the password into the temporary config file
-	touch /healthcheck.cnf
-	cat >"/healthcheck.cnf" <<EOF
-[client]
-user=healthchecker
-socket=${SOCKET}
-password=healthcheckpass
-EOF
-	touch /mysql-init-complete
-	chown -R mysql:mysql "$DATADIR"
-	echo "[Entrypoint] Starting MySQL 8.0.2-dmr-1.1.0"
 fi
 
-exec "$@"
 
+
+###
+### Start
+###
+log "info" "Starting $(mysqld --version)"
+exec mysqld
