@@ -24,9 +24,10 @@ https://product-dist.wso2.com/products/identity-server/5.3.0/wso2is-5.3.0.zip | 
 
 Esto despliega lo siguiente,
 
-* Mysql server (contenedor) con apimdb, userdb, regdb, y ApacheDS con
-* APIM Contenedor
-* IS (Contenedor)
+* Mysql server con apimdb, userdb, regdb
+* ApacheDS con
+* APIM 
+* IS 
 
 #### Como probar
 
