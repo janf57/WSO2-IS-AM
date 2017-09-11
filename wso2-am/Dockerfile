@@ -1,6 +1,7 @@
 FROM centos:7
 
 LABEL maintainer="janavarro.fuentes@atsistemas.com"
+LABEL version="0.0.1"
 
 ENV http_proxy http://T0000104:12345678@192.168.50.140:8080
 ENV https_proxy https://T0000104:12345678@192.168.50.140:8080
@@ -11,7 +12,7 @@ ENV WSO2_PRODUCT_WUM_FOLDER wso2am-2.1.0
 
 ENV WSO2_VERSION 2.1.0
 
-ADD /deps/packages/unzip-6.0-16.el7.x86_64.rpm /tmp/unzip-6.0-16.el7.x86_64.rpm
+ADD deps/am/packages/unzip-6.0-16.el7.x86_64.rpm /tmp/unzip-6.0-16.el7.x86_64.rpm
 RUN rpm -i /tmp/unzip-6.0-16.el7.x86_64.rpm \
     && rm /tmp/unzip-6.0-16.el7.x86_64.rpm
 
@@ -22,7 +23,7 @@ RUN unzip jq-linux64*.zip \
     && chmod +x /usr/bin/jq \
     && rm jq-linux64*.zip
 		
-ADD /deps/packages/jdk-8u144-linux-x64.rpm /tmp/jdk-8u144-linux-x64.rpm
+ADD deps/am/packages/jdk-8u144-linux-x64.rpm /tmp/jdk-8u144-linux-x64.rpm
 RUN rpm -i /tmp/jdk-8u144-linux-x64.rpm \
 	&& ln -s /usr/java/jdk1.8.0_144 /usr/java/jdk \
     && rm /tmp/jdk-8u144-linux-x64.rpm

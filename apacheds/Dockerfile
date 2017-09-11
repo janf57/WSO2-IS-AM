@@ -7,8 +7,8 @@ LABEL version="0.0.1"
 #Instalación de ApacheDS
 USER root
 RUN groupadd -r apacheds && useradd -r -g apacheds apacheds
-ADD /deps/ldap/apacheds.sh /usr/local/bin/	
-ADD /deps/ldap/packages/* /tmp/
+ADD deps/ldap/apacheds.sh /usr/local/bin/	
+ADD deps/ldap/packages/* /tmp/
 
 # gettext
 RUN rpm -i  /tmp/*.rpm
