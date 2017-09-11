@@ -1,5 +1,5 @@
 #!/bin/bash
-. /root/functions.sh  --source-only
+. /ldap/functions.sh  --source-only
 
 /etc/init.d/apacheds-2.0.0_M19-default start
 /etc/sysconfig/xinetd start
@@ -49,7 +49,7 @@ enable_replication
 setup_replication
 
 
-nohup /root/replica_check.sh 0<&- &> /tmp/replica_check.log &
+nohup /ldap/replica_check.sh 0<&- &> /tmp/replica_check.log &
 
 
 /etc/init.d/apacheds-2.0.0_M19-default stop

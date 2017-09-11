@@ -18,7 +18,7 @@ send_ldif ()
   test_replication
 
   if [ ! -n "${REPLICATION}" ]; then
-    envsubst < "/templates/${TEMPLATE}.ldif" > "/tmp/${TEMPLATE}.ldif"
+    envsubst < "/ldap/templates/${TEMPLATE}.ldif" > "/tmp/${TEMPLATE}.ldif"
     ldapmodify -c -a -f /tmp/${TEMPLATE}.ldif -h localhost -p 10389 -D "uid=admin,ou=system" -w ${ADMIN_PASSWORD}
   fi
 }
@@ -41,8 +41,8 @@ find_marathon_replicas ()
     export REPLICA_HOSTS=`curl -s ${MARATHON_HOST}/v2/apps/${REPLICA_APP}/tasks | jq -r '.tasks[] | .host'`
     export REPLICA_PORTS=`curl -s ${MARATHON_HOST}/v2/apps/${REPLICA_APP}/tasks | jq -r '.tasks[] | .ports[0]'`
   fi
-  echo "$REPLICA_HOSTS" > /root/CURRENT_REPLICA_HOSTS
-  echo "$REPLICA_PORTS" > /root/CURRENT_REPLICA_PORTS
+  echo "$REPLICA_HOSTS" > /ldap/CURRENT_REPLICA_HOSTS
+  echo "$REPLICA_PORTS" > /ldap/CURRENT_REPLICA_PORTS
 }
 
 add_replica()
@@ -68,8 +68,8 @@ delete_replica()
 
 known_replicas()
 {
-  yes | cp -rf /root/CURRENT_REPLICA_HOSTS /root/KNOWN_REPLICA_HOSTS
-  yes | cp -rf /root/CURRENT_REPLICA_PORTS /root/KNOWN_REPLICA_PORTS
+  yes | cp -rf /ldap/CURRENT_REPLICA_HOSTS /ldap/KNOWN_REPLICA_HOSTS
+  yes | cp -rf /ldap/CURRENT_REPLICA_PORTS /ldap/KNOWN_REPLICA_PORTS
 }
 
 setup_replication ()

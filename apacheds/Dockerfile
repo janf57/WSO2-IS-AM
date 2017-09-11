@@ -21,8 +21,13 @@ RUN chmod +x /etc/sysconfig/xinetd \
     && chown -R apacheds.apacheds /var/lib/apacheds-2.0.0_M19/default/partitions \
     && mkdir ldap \
     && mkdir ldap/templates \
-	&& mkdir ldap/ldifs
+	&& mkdir ldap/ldifs\
+	&& ln -s /usr/java/jdk1.8.0_144 /usr/java/jdk 
 
+ENV JAVA_HOME=/usr/java/jdk1.8.0_144
+
+ENV PATH "$PATH:$JAVA_HOME/bin"
+	
 COPY deps/ldap/files/health_check.sh ldap/health_check.sh
 COPY deps/ldap/files/healthchk /etc/xinetd.d/healthchk
 COPY deps/ldap/ldifs/* ldap/ldifs/

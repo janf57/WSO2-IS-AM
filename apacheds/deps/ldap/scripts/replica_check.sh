@@ -1,5 +1,5 @@
 #!/bin/bash
-. /root/functions.sh  --source-only
+. /ldap/functions.sh  --source-only
 
 subtract_arrays()
 {
@@ -37,11 +37,11 @@ do
   echo "Start Checking" 
   find_marathon_replicas
 
-  REPLICA_HOSTS_ARRAY=($(cat /root/CURRENT_REPLICA_HOSTS))
-  REPLICA_PORTS_ARRAY=($(cat /root/CURRENT_REPLICA_PORTS))
+  REPLICA_HOSTS_ARRAY=($(cat /ldap/CURRENT_REPLICA_HOSTS))
+  REPLICA_PORTS_ARRAY=($(cat /ldap/CURRENT_REPLICA_PORTS))
 
-  KNOWN_HOSTS=($(cat /root/KNOWN_REPLICA_HOSTS))
-  KNOWN_PORTS=($(cat /root/KNOWN_REPLICA_PORTS))
+  KNOWN_HOSTS=($(cat /ldap/KNOWN_REPLICA_HOSTS))
+  KNOWN_PORTS=($(cat /ldap/KNOWN_REPLICA_PORTS))
 
   RHP=($(join_arrays REPLICA_HOSTS_ARRAY[@] REPLICA_PORTS_ARRAY[@]))
   KHP=($(join_arrays KNOWN_HOSTS[@] KNOWN_PORTS[@]))
