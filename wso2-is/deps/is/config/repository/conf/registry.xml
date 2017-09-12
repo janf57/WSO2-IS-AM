@@ -36,7 +36,7 @@
     </dbConfig>
     <remoteInstance url="https://publisher">
         <id>gov</id>
-        <cacheId>root@jdbc:mysql://mysql:3306/regdb</cacheId>
+        <cacheId>root@jdbc:mysql://apim-db:3306/regdb</cacheId>
         <dbConfig>govregistry</dbConfig>
         <readOnly>false</readOnly>
         <enableCache>true</enableCache>

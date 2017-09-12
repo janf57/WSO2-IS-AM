@@ -31,7 +31,6 @@ ADD deps/is/wso2is-${WSO2_VERSION}.zip /tmp/wso2is-${WSO2_VERSION}.zip
 RUN chmod +rx /tmp/wso2is-${WSO2_VERSION}.zip \
     && mv /tmp/${WSO2_BUNDLE_NAME}.zip /tmp/${WSO2_PRODUCT_FOLDER}-stage/  \
     && unzip /tmp/${WSO2_PRODUCT_FOLDER}-stage/${WSO2_BUNDLE_NAME}.zip -d /opt/ \
-    && mv /opt/${WSO2_PRODUCT_WUM_FOLDER} /opt/${WSO2_PRODUCT_FOLDER} \
     && rm /tmp/${WSO2_PRODUCT_FOLDER}-stage/${WSO2_BUNDLE_NAME}.zip
 
 ADD deps/is/mysql-connector-java-5.1.43-bin.jar /tmp/

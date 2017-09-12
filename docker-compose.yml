@@ -1,7 +1,7 @@
 version: "3.3"
 
 services:
-  mysql:
+  apim-db:
     image: janf57/mysql:0.0.1
     build: mysql
     container_name: mysql
@@ -32,7 +32,7 @@ services:
     volumes:
       - wso2data:/usr/share/wso2/data
     depends_on:
-      - mysql
+      - apim-db
       - apacheds
   
   api-manager:
@@ -40,14 +40,14 @@ services:
     build: wso2-am
     container_name: am
     ports:
-      - "9444:9443"
-      - "9764:9763"
-      - "8244:8243"
-      - "8281:8280"
+      - "9444:9444"
+      - "9764:9764"
+      - "8244:8244"
+      - "8281:8281"
     volumes:
       - wso2data:/usr/share/wso2/data  
     depends_on:
-      - mysql
+      - apim-db
       - apacheds
       - is-key-manager
       

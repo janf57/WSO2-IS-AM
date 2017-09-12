@@ -32,24 +32,28 @@ Esto despliega lo siguiente,
 
 #### Como probar
 
+Añadir las siguientes entradas a /etc/hosts o a C:\Windows\System32\drivers\etc\hosts
+```
+127.0.0.1 api-manager is-key-manager apim_db
+```
 
 #### Como acceder al entorno
 
 Publisher
 
 ```
-https://localhost:9444/publisher
+https://api-manager:9444/publisher
 ```
 
 Store
 
 ```
-https://localhost:9444/store/
+https://api-manager:9444/store/
 ```
 
 
 Gateway Manager
 
 ```
-https://localhost:9444/carbon/
+https://api-manager:9444/carbon/
 ```
