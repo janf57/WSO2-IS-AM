@@ -3,11 +3,8 @@ FROM centos:7
 LABEL maintainer="janavarro.fuentes@atsistemas.com"
 LABEL version="0.0.1"
 
-ENV http_proxy http://T0000104:12345678@192.168.50.140:8080
-ENV https_proxy https://T0000104:12345678@192.168.50.140:8080
-
 ENV WSO2_PRODUCT_FOLDER wso2is-5.3.0
-ENV WSO2_BUNDLE_NAME wso2is-5.3.0
+ENV WSO2_BUNDLE_NAME wso2is-km-5.3.0
 ENV WSO2_PRODUCT_WUM_FOLDER wso2is-5.3.0
 
 ENV WSO2_VERSION 5.3.0
@@ -29,17 +26,13 @@ ENV JAVA_HOME=/usr/java/jdk1.8.0_144
 
 ADD deps/is/wso2is-${WSO2_VERSION}.zip /tmp/wso2is-${WSO2_VERSION}.zip 
 RUN chmod +rx /tmp/wso2is-${WSO2_VERSION}.zip \
-    && mv /tmp/${WSO2_BUNDLE_NAME}.zip /tmp/${WSO2_PRODUCT_FOLDER}-stage/  \
-    && unzip /tmp/${WSO2_PRODUCT_FOLDER}-stage/${WSO2_BUNDLE_NAME}.zip -d /opt/ \
-    && rm /tmp/${WSO2_PRODUCT_FOLDER}-stage/${WSO2_BUNDLE_NAME}.zip
+    && mv /tmp/wso2is-${WSO2_VERSION}.zip /tmp/${WSO2_PRODUCT_FOLDER}-stage/  \
+    && unzip /tmp/${WSO2_PRODUCT_FOLDER}-stage/wso2is-${WSO2_VERSION}.zip -d /tmp/ \
+    && mv /tmp/${WSO2_BUNDLE_NAME} /opt/${WSO2_PRODUCT_FOLDER} \
+    && rm /tmp/${WSO2_PRODUCT_FOLDER}-stage/wso2is-${WSO2_VERSION}.zip
 
 ADD deps/is/mysql-connector-java-5.1.43-bin.jar /tmp/
 RUN mv /tmp/mysql-connector-java-5.1.43-bin.jar /opt/${WSO2_PRODUCT_FOLDER}/repository/components/lib/
-
-ENV http_proxy ""
-ENV https_proxy ""
-RUN unset http_proxy
-RUN unset https_proxy
 
 # Create symlink
 RUN ln -s /opt/${WSO2_PRODUCT_FOLDER}/repository/resources/security/ /etc/ssl

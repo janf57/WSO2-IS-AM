@@ -3,9 +3,6 @@ FROM centos:7
 LABEL maintainer="janavarro.fuentes@atsistemas.com"
 LABEL version="0.0.1"
 
-ENV http_proxy http://T0000104:12345678@192.168.50.140:8080
-ENV https_proxy https://T0000104:12345678@192.168.50.140:8080
-
 ENV WSO2_PRODUCT_FOLDER wso2am-2.1.0
 ENV WSO2_BUNDLE_NAME wso2am-2.1.0
 ENV WSO2_PRODUCT_WUM_FOLDER wso2am-2.1.0
@@ -45,17 +42,9 @@ COPY deps/mysql-connector-java-5.1.43-bin.jar /opt/${WSO2_PRODUCT_FOLDER}/reposi
 COPY deps/am/jars/*.jar /opt/${WSO2_PRODUCT_FOLDER}/repository/components/lib/
 
 COPY deps/am/config/ /opt/${WSO2_PRODUCT_FOLDER}/ 
-#COPY deps/am/config/config.zip . 
-#RUN unzip -o /config.zip -d /opt/${WSO2_PRODUCT_FOLDER}/ 
-#RUN rm config.zip
 
-ENV http_proxy ""
-ENV https_proxy ""
-RUN unset http_proxy
-RUN unset https_proxy
-#Copy patches
-#RUN cp /tmp/wso2am-config-stage/wso2am-config-${WSO2_ECI_CONFIG}/docker/repository/components/patches/*.jar /opt/${WSO2_PRODUCT_FOLDER}/repository/components/patches/
 RUN rm -rf /tmp/wso2am-config-stage
+
 # Create symlink
 RUN ln -s /opt/${WSO2_PRODUCT_FOLDER}/repository/resources/security/ /etc/ssl
 WORKDIR /opt/${WSO2_PRODUCT_FOLDER}/
