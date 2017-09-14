@@ -10,13 +10,16 @@ ENV WSO2_PRODUCT_WUM_FOLDER wso2is-${WSO2_VERSION}
 
 ENV JDK_VERSION 1.8.0_144
 
+ENV JAVA_TOOL_OPTIONS -Duser.timezone=Europe/Madrid
+ENV TZ CET-1CEST,M3.5.0,M10.5.0/3
+
 RUN mkdir -p /tmp/${WSO2_PRODUCT_FOLDER}-stage
 
-COPY wso2-is/deps/is/packages/unzip-6.0-16.el7.x86_64.rpm /tmp/unzip-6.0-16.el7.x86_64.rpm
+COPY deps/is/packages/unzip-6.0-16.el7.x86_64.rpm /tmp/unzip-6.0-16.el7.x86_64.rpm
 RUN rpm -i /tmp/unzip-6.0-16.el7.x86_64.rpm \
     && rm /tmp/unzip-6.0-16.el7.x86_64.rpm
 
-COPY wso2-is/deps/is/packages/jdk-8u144-linux-x64.rpm /tmp/jdk-8u144-linux-x64.rpm
+COPY deps/is/packages/jdk-8u144-linux-x64.rpm /tmp/jdk-8u144-linux-x64.rpm
 RUN rpm -i /tmp/jdk-8u144-linux-x64.rpm \
 	&& ln -s /usr/java/jdk${JDK_VERSION} /usr/java/jdk \
     && rm /tmp/jdk-8u144-linux-x64.rpm
@@ -25,14 +28,14 @@ ENV JAVA_HOME=/usr/java/jdk${JDK_VERSION}
 
 # Configuracion WSO2 Identity Server
 
-COPY wso2-is/deps/is/wso2is-${WSO2_VERSION}.zip /tmp/wso2is-${WSO2_VERSION}.zip 
+COPY deps/is/wso2is-${WSO2_VERSION}.zip /tmp/wso2is-${WSO2_VERSION}.zip 
 RUN chmod +rx /tmp/wso2is-${WSO2_VERSION}.zip \
     && mv /tmp/wso2is-${WSO2_VERSION}.zip /tmp/${WSO2_PRODUCT_FOLDER}-stage/  \
     && unzip /tmp/${WSO2_PRODUCT_FOLDER}-stage/wso2is-${WSO2_VERSION}.zip -d /tmp/ \
     && mv /tmp/${WSO2_BUNDLE_NAME} /opt/${WSO2_PRODUCT_FOLDER} \
     && rm /tmp/${WSO2_PRODUCT_FOLDER}-stage/wso2is-${WSO2_VERSION}.zip
 
-COPY wso2-is/deps/is/mysql-connector-java-5.1.43-bin.jar /tmp/
+COPY deps/is/mysql-connector-java-5.1.43-bin.jar /tmp/
 RUN mv /tmp/mysql-connector-java-5.1.43-bin.jar /opt/${WSO2_PRODUCT_FOLDER}/repository/components/lib/
 
 # Create symlink

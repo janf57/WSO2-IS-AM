@@ -8,10 +8,13 @@ LABEL version="0.0.1"
 ENV APACHEDS_VERSION 2.0.0_M19
 ENV JDK_VERSION 1.8.0_144
 
+ENV JAVA_TOOL_OPTIONS -Duser.timezone=Europe/Madrid
+ENV TZ CET-1CEST,M3.5.0,M10.5.0/3
+
 USER root
 RUN groupadd -r apacheds && useradd -r -g apacheds apacheds
-COPY apacheds/deps/ldap/apacheds.sh /usr/local/bin/	
-COPY apacheds/deps/ldap/packages/* /tmp/
+COPY deps/ldap/apacheds.sh /usr/local/bin/	
+COPY deps/ldap/packages/* /tmp/
 
 # gettext
 RUN rpm -i  /tmp/*.rpm
@@ -31,9 +34,9 @@ ENV JAVA_HOME=/usr/java/jdk${JDK_VERSION}
 
 ENV PATH "$PATH:$JAVA_HOME/bin"
 	
-COPY apacheds/deps/ldap/files/health_check.sh ldap/health_check.sh
-COPY apacheds/deps/ldap/files/healthchk /etc/xinetd.d/healthchk
-COPY apacheds/deps/ldap/ldifs/* ldap/ldifs/
+COPY deps/ldap/files/health_check.sh ldap/health_check.sh
+COPY deps/ldap/files/healthchk /etc/xinetd.d/healthchk
+COPY deps/ldap/ldifs/* ldap/ldifs/
 
 RUN rm /tmp/*
 
@@ -41,8 +44,8 @@ RUN echo 'healthchk      11001/tcp' >> /etc/services
 
 EXPOSE 10389 10636 11001
 
-COPY apacheds/deps/ldap/templates/* ldap/templates/
+COPY deps/ldap/templates/* ldap/templates/
 
-COPY apacheds/deps/ldap/scripts/* ldap/
+COPY deps/ldap/scripts/* ldap/
 
 ENTRYPOINT ["ldap/start.sh"]
