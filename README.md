@@ -25,6 +25,7 @@ http://product-dist.wso2.com/downloads/api-manager/2.1.0/identity-server/wso2is-
 
 Esto despliega lo siguiente,
 
+* Consul para k-V configuración, y health check
 * Mysql server con apimdb, userdb, regdb
 * ApacheDS con
 * APIM 
@@ -34,26 +35,26 @@ Esto despliega lo siguiente,
 
 Añadir las siguientes entradas a /etc/hosts o a C:\Windows\System32\drivers\etc\hosts
 ```
-127.0.0.1 api-manager is-key-manager apim_db
+127.0.0.1 api-manager is-key-manager apim_db consul
 ```
 
 #### Como acceder al entorno
+Consul
+```
+http://consul:8500
+```
 
 Publisher
-
 ```
 https://api-manager:9444/publisher
 ```
 
 Store
-
 ```
 https://api-manager:9444/store/
 ```
 
-
 Gateway Manager
-
 ```
 https://api-manager:9444/carbon/
 ```
