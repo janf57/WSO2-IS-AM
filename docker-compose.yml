@@ -74,6 +74,24 @@ services:
       - apacheds
       - is-key-manager
       - consul
+      - analytics
+
+  analytics:
+    image: janf57/wso2-das:0.0.1
+    build:
+      context: ./wso2-das
+    container_name: das
+    ports:
+      - "9445:9445"
+      - "9765:9765"
+      - "8245:8245"
+      - "8282:8282"
+    volumes:
+      - wso2data:/usr/share/wso2/data
+    depends_on:
+      - apim-db
+      - apacheds
+      - consul
       
 volumes:
   wso2data:

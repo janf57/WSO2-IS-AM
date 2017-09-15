@@ -4,16 +4,15 @@ LABEL maintainer="janavarro.fuentes@atsistemas.com"
 LABEL version="0.0.1"
 
 ENV WSO2_VERSION 5.3.0
-ENV WSO2_PRODUCT_FOLDER wso2is-${WSO2_VERSION}
-ENV WSO2_BUNDLE_NAME wso2is-km-${WSO2_VERSION}
-ENV WSO2_PRODUCT_WUM_FOLDER wso2is-${WSO2_VERSION}
+ENV WSO2_PRODUCT wso2is
+ENV WSO2_PRODUCT_FOLDER ${WSO2_PRODUCT}-${WSO2_VERSION}
+ENV WSO2_BUNDLE_NAME ${WSO2_PRODUCT}-km-${WSO2_VERSION}
+ENV WSO2_PRODUCT_WUM_FOLDER ${WSO2_PRODUCT}-${WSO2_VERSION}
 
 ENV JDK_VERSION 1.8.0_144
 
 ENV JAVA_TOOL_OPTIONS -Duser.timezone=Europe/Madrid
 ENV TZ CET-1CEST,M3.5.0,M10.5.0/3
-
-RUN mkdir -p /tmp/${WSO2_PRODUCT_FOLDER}-stage
 
 COPY deps/is/packages/unzip-6.0-16.el7.x86_64.rpm /tmp/unzip-6.0-16.el7.x86_64.rpm
 RUN rpm -i /tmp/unzip-6.0-16.el7.x86_64.rpm \
@@ -26,17 +25,20 @@ RUN rpm -i /tmp/jdk-8u144-linux-x64.rpm \
 
 ENV JAVA_HOME=/usr/java/jdk${JDK_VERSION}
 
-# Configuracion WSO2 Identity Server
+RUN mkdir -p /tmp/${WSO2_PRODUCT_FOLDER}-stage
 
-COPY deps/is/wso2is-${WSO2_VERSION}.zip /tmp/wso2is-${WSO2_VERSION}.zip 
-RUN chmod +rx /tmp/wso2is-${WSO2_VERSION}.zip \
-    && mv /tmp/wso2is-${WSO2_VERSION}.zip /tmp/${WSO2_PRODUCT_FOLDER}-stage/  \
-    && unzip /tmp/${WSO2_PRODUCT_FOLDER}-stage/wso2is-${WSO2_VERSION}.zip -d /tmp/ \
-    && mv /tmp/${WSO2_BUNDLE_NAME} /opt/${WSO2_PRODUCT_FOLDER} \
-    && rm /tmp/${WSO2_PRODUCT_FOLDER}-stage/wso2is-${WSO2_VERSION}.zip
+COPY deps/is/${WSO2_PRODUCT_FOLDER}.zip /tmp/${WSO2_PRODUCT_FOLDER}.zip  
+RUN chmod +rx /tmp/${WSO2_PRODUCT_FOLDER}.zip \
+    && unzip /tmp/${WSO2_PRODUCT_FOLDER}.zip -d /tmp/${WSO2_PRODUCT_FOLDER}-stage/ \
+    && mv /tmp/${WSO2_PRODUCT_FOLDER}-stage/${WSO2_BUNDLE_NAME} /opt/${WSO2_PRODUCT_FOLDER} \
+    && rm /tmp/${WSO2_PRODUCT_FOLDER}.zip
 
 COPY deps/is/mysql-connector-java-5.1.43-bin.jar /tmp/
 RUN mv /tmp/mysql-connector-java-5.1.43-bin.jar /opt/${WSO2_PRODUCT_FOLDER}/repository/components/lib/
+
+COPY deps/is/config/ /opt/${WSO2_PRODUCT_FOLDER}/ 
+
+RUN rm -rf /tmp/${WSO2_PRODUCT}-config-stage
 
 # Create symlink
 RUN ln -s /opt/${WSO2_PRODUCT_FOLDER}/repository/resources/security/ /etc/ssl
