@@ -36,7 +36,7 @@ RUN chmod +rx /tmp/${WSO2_PRODUCT_FOLDER}.zip \
 COPY deps/das/mysql-connector-java-5.1.43-bin.jar /opt/${WSO2_PRODUCT_FOLDER}/repository/components/lib/
 
 COPY deps/das/config/ /opt/${WSO2_PRODUCT_FOLDER}/ 
-
+ 
 RUN rm -rf /tmp/${WSO2_PRODUCT}-config-stage
 
 # Create symlink
@@ -44,6 +44,6 @@ RUN ln -s /opt/${WSO2_PRODUCT_FOLDER}/repository/resources/security/ /etc/ssl
 
 WORKDIR /opt/${WSO2_PRODUCT_FOLDER}/
 
-EXPOSE 9445 9765 8245 8282 7713 7613
+EXPOSE 7613 7713 9765 9445 9613 9713
 
 ENTRYPOINT /opt/${WSO2_PRODUCT_FOLDER}/bin/wso2server.sh

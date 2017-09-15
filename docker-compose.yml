@@ -82,10 +82,12 @@ services:
       context: ./wso2-das
     container_name: das
     ports:
-      - "9445:9445"
+      - "7613:7613"
+      - "7713:7713"
       - "9765:9765"
-      - "8245:8245"
-      - "8282:8282"
+      - "9445:9445"
+      - "9613:9613"
+      - "9713:9713"
     volumes:
       - wso2data:/usr/share/wso2/data
     depends_on:
