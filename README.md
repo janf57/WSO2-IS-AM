@@ -1,4 +1,5 @@
-### API Manager 2.1.0 - Identity Server 5.3.0 con Docker compose
+# Ejemplo de uso de docker con API Manager 2.1.0 - Identity Server 5.3.0 - Data Analytics 3.1.0
+Este ejemplo esta montado con API Manager 2.1.0, Identity Server 5.3.0, Data Analytics 3.1.0, utilizando como BD MySQL, apoyandose en consul, para chequeo de salud y almacenamiento de configuración, y ApacheDS como servidor de servicios de directorio.
 
 ![alt tag](https://github.com/janf57/WSO2-IS-AM/blob/master/doc/am-2.1.0-is-5.3.0.jpeg)
 
@@ -19,7 +20,7 @@ curl -O  -A "testuser" -H "Referer: http://connect.wso2.com/wso2/getform/reg/new
 http://product-dist.wso2.com/downloads/api-manager/2.1.0/identity-server/wso2is-km-5.3.0.zip | wso2-is/deps/is
 curl -O  -A "testuser" -H "Referer: http://connect.wso2.com/wso2/getform/reg/new_product_download" https://product-dist.wso2.com/products/data-analytics-server/3.1.0/wso2das-3.1.0.zip | wso2-das/deps/das
 
-#### Como lanzarlo
+## Como lanzarlo
 
 ```docker-compose pull```
 
@@ -39,21 +40,16 @@ Esto despliega lo siguiente,
 * **[Identity Server][identity]** Producto que actua como **Key Manager** del API Manager,  gestiona la seguridad y los tokens de acceso.
 * **[Data analitycs][analytics]** Producto que permite el análisis de flujos de datos procedentes del API Manager.
 
-[apim]: https://wso2.com/api-management/
-[consul]: https://www.consul.io/
-[mysql]: https://www.mysql.com/
-[identity]: https://wso2.com/identity-and-access-management
-[analytics]: https://wso2.com/analytics
-[apacheds]: http://directory.apache.org/apacheds/
 
-#### Como probar
+
+### Como probar
 
 Añadir las siguientes entradas a /etc/hosts o a C:\Windows\System32\drivers\etc\hosts
 ```
 127.0.0.1 api-manager is-key-manager apim_db consul
 ```
 
-#### Como acceder al entorno
+### Como acceder al entorno
 **Consul**
 ```
 http://consul:8500
@@ -73,3 +69,85 @@ https://api-manager:9444/store/
 ```
 https://api-manager:9444/carbon/
 ```
+
+## Pasos seguidos para montar el entorno
+* Integración **API Manager** con **Identity Server** y **MySQL**
+
+   Se ha seguido el proceso indicado en [Configuring WSO2 Identity Server as a Key Manager][ISAM]
+
+* Integración de **API Manager** con **Data Analytics**
+
+  Se ha seguido el proceso indicado en [Configuring APIM Analytics][ANAM]
+
+* Procedimiento seguido para añadir un dominio al KeyStore
+
+    * Crear un KeyStore incluyendo el dominio como Common Name (CN)
+    
+     ```sh 
+    keytool -genkey -alias at -keyalg RSA -keystore  at.jks -keysize 2048
+    ```
+    ```sh
+     Enter keystore password:wso2carbon
+     Re-enter new password: wso2carbon
+     What is your first and last name?
+     [Unknown]:  api-manager
+     What is the name of your organizational unit? 
+     [Unknown]:
+     What is the name of your organization? 
+     [Unknown]:  atSistemas
+     What is the name of your City or Locality? 
+     [Unknown]:  MAD
+     What is the name of your State or Province? 
+     [Unknown]:  MAD
+     What is the two-letter country code for this unit? 
+     [Unknown]:  ES
+     Is CN=api-manager, OU=Unknown, O=atSistemas, L=MAD, ST=MAD, C=ES correct? 
+    [no]:  yes
+    Enter key password for <wso2carbon>
+    (RETURN if same as keystore password):  wso2carbon
+    Re-enter new password: wso2carbon
+    ```
+    
+    * Configurar el SSL KeyStore
+    ```sh
+    keytool -export -alias at -file at -keystore at.jks -storepass wso2carbon
+    keytool -import -alias at -file at -keystore client-truststore.jks -storepass wso2carbon
+    ```
+
+    Actualizar los parametros KeyStoreFile y KeyStorePass del conector HTTPS de Tomcat
+    Cambiar el parametro keystoreFile y keystorePass del Server.Service.Connector para el puerto 9443 en el fichero <PRODUCT_HOME>/repository/conf/tomcat/catalina­server.xml dejandolo como sigue.
+    ```sh
+    .........
+     <Connector protocol=”org.apache.coyote.http11.Http11NioProtocol”
+     port=”9443"
+     ......
+     keystoreFile=”${carbon.home}/repository/resources/security/at.jks”
+     keystorePass=”wso2carbon”
+     URIEncoding=”UTF-8"/>
+     ........
+    ```
+    * Configurar el api manager
+    Actualizar los valores de <Password>, <KeyAlias>, <KeyPassword> del campo <KeyStore> en el fichero <PRODUCT_HOME>/repository/conf/carbon.xml .
+    
+    ```sh
+    <KeyStore>
+        <!-- Keystore file location-->
+        <Location>${carbon.home}/repository/resources/security/at.jks</Location>
+        <!-- Keystore type (JKS/PKCS12 etc.)-->
+        <Type>JKS</Type>
+        <!-- Keystore password-->
+        <Password>wso2carbon</Password>
+        <!-- Private Key alias-->
+        <KeyAlias>at</KeyAlias>
+        <!-- Private Key password-->
+        <KeyPassword>wso2carbon</KeyPassword>
+    </KeyStore>
+    ```
+[apim]: https://wso2.com/api-management/
+[consul]: https://www.consul.io/
+[mysql]: https://www.mysql.com/
+[identity]: https://wso2.com/identity-and-access-management
+[analytics]: https://wso2.com/analytics
+[apacheds]: http://directory.apache.org/apacheds/
+[ISAM]: https://docs.wso2.com/display/AM210/Configuring+WSO2+Identity+Server+as+a+Key+Manager
+[ANAM]: https://docs.wso2.com/display/AM210/Configuring+APIM+Analytics
