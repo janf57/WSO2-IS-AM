@@ -44,6 +44,6 @@ RUN ln -s /opt/${WSO2_PRODUCT_FOLDER}/repository/resources/security/ /etc/ssl
 
 WORKDIR /opt/${WSO2_PRODUCT_FOLDER}/
 
-EXPOSE 9443 9763 8243 8280
+EXPOSE 9445 9765 8245 8282 7713 7613
 
-#ENTRYPOINT /opt/${WSO2_PRODUCT_FOLDER}/bin/wso2server.sh
+ENTRYPOINT /opt/${WSO2_PRODUCT_FOLDER}/bin/wso2server.sh
