@@ -1,0 +1,73 @@
+version: '2'
+
+services:
+  apim-rdbms:
+    image: janf57/wso2-am-mysql:1.0.0
+    build:
+      context: ./wso2-am-mysql
+      dockerfile: Dockerfile
+    container_name: wso2-am-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - "3306:3306"
+      
+  consul:
+    image: janf57/wso2-am-consul:1.0.0
+    build:
+      context: ./wso2-am-consul
+      dockerfile: Dockerfile
+    container_name: wso2-am-consul
+    ports:
+      - "8500:8500"
+      
+  apacheds:
+    image: janf57/wso2-am-apacheds:1.0.0
+    build:
+      context: ./wso2-am-apacheds
+      dockerfile: Dockerfile
+    container_name: wso2-am-apacheds
+    ports:
+      - "10389:10389"
+      - "10636:10636"
+ 
+  is-key-manager:
+    image: janf57/wso2-am-is:1.0.0
+    build:
+      context: ./wso2-am-is
+      dockerfile: Dockerfile
+    container_name: wso2-am-is
+    ports:
+      - "9445:9443"
+    environment:
+      SLEEP: 100
+    extra_hosts:
+      - "is-key-manager:127.1.0.0"
+       
+  api-manager:
+    image: janf57/wso2-am:1.0.0
+    build:
+      context: ./wso2-am
+      dockerfile: Dockerfile
+    container_name: wso2-am
+    ports:
+      - "443:9443"
+      - "80:9763"
+      - "8280:8280"
+      - "8243:8243"
+    environment:
+      SLEEP: 300
+    extra_hosts:
+      - "api-manager:127.0.0.1"  
+      
+  am-analytics:
+    image: janf57/wso2-am-das:1.0.0
+    build:
+      context: ./wso2-am-das
+      dockerfile: Dockerfile
+    container_name: wso2-am-das
+    ports:
+      - "9444:9444"
+      - "9764:9764"
+    environment:
+      SLEEP: 120
