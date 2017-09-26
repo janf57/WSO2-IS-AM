@@ -3,6 +3,8 @@ Este ejemplo esta montado con API Manager 2.1.0, Identity Server 5.3.0, Data Ana
 
 ![alt tag](https://github.com/janf57/WSO2-IS-AM/blob/master/doc/am-2.1.0-is-5.3.0.jpeg)
 
+![pattern-design](doc/am-2.1.0-is-5.3.0.jpeg)
+
 ## Pre-requisitos
 
  * Docker 
@@ -57,17 +59,17 @@ http://consul:8500
 
 **Publisher**
 ```
-https://api-manager:9444/publisher
+https://api-manager/publisher
 ```
 
 **Store**
 ```
-https://api-manager:9444/store/
+https://api-manager/store/
 ```
 
 **Gateway Manager**
 ```
-https://api-manager:9444/carbon/
+https://api-manager/carbon/
 ```
 
 **Machine Learner**
