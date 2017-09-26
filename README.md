@@ -1,9 +1,7 @@
 # Ejemplo de uso de docker con API Manager 2.1.0 - Identity Server 5.3.0 - Data Analytics 3.1.0
 Este ejemplo esta montado con API Manager 2.1.0, Identity Server 5.3.0, Data Analytics 3.1.0, utilizando como BD MySQL, apoyandose en consul, para chequeo de salud y almacenamiento de configuración, y ApacheDS como servidor de servicios de directorio.
 
-![alt tag](https://github.com/janf57/WSO2-IS-AM/blob/master/doc/am-2.1.0-is-5.3.0.jpeg)
-
-![pattern-design](doc/am-2.1.0-is-5.3.0.jpeg)
+![diseño](doc/am-2.1.0-is-5.3.0.jpeg)
 
 ## Pre-requisitos
 
